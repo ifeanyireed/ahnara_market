@@ -1,13 +1,9 @@
 import type { Metadata } from "next";
-import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ahnara/ThemeProvider";
 import { NicheProvider } from "@/components/ahnara/NicheContext";
 import { AuthProvider } from "@/components/ahnara/AuthContext";
 import { LocationProvider } from "@/components/ahnara/LocationContext";
-
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
-const jetbrains = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains" });
 
 export const metadata: Metadata = {
   title: "Ahnara Market",
@@ -26,7 +22,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.variable} ${jetbrains.variable} antialiased`} suppressHydrationWarning>
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <ThemeProvider>
           <AuthProvider>
             <NicheProvider>

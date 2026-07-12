@@ -13,9 +13,11 @@ import {
   IconMinus,
   IconX,
   IconShieldCheck,
+  IconChevronLeft,
   IconChevronRight,
   IconStar,
-  IconDashboard,
+  IconUser,
+  IconCamera,
   IconGridPattern,
   IconAdjustmentsHorizontal
 } from "@tabler/icons-react";
@@ -29,6 +31,31 @@ export default function CreativeStorefrontPage() {
   const [cart, setCart] = useState<{ product: Product; qty: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
+
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const bannerSlides = [
+    {
+      title: "Health and Wellness, delivered to you.",
+      subtitle: "Get home delivery on verified medicines, maternal care supplies, and diagnostic lab test kits audited by professional medical boards.",
+      image: "/market-banner.jpg",
+      cta1: "Shop Now",
+      cta2: "Explore Deals"
+    },
+    {
+      title: "100% Vetted Sellers & Secure Registry",
+      subtitle: "Every prescription, medical supply, and specialist service is audited. Shop with peace of mind under verified digital registry protection.",
+      image: "/market-banner.jpg",
+      cta1: "View Directory",
+      cta2: "Security Specs"
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide(prev => (prev + 1) % bannerSlides.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("ahnara_market_cart");
@@ -101,7 +128,44 @@ export default function CreativeStorefrontPage() {
     }
   };
 
-  const categories = ["All", "Maternal Care", "Pediatrics", "Geriatrics", "Diagnostic Scans", "Medical Supplies"];
+  const categories = [
+    "All",
+    "Maternal Care",
+    "Pediatrics",
+    "Geriatrics",
+    "Diagnostic Scans",
+    "Medical Supplies",
+    "Prescription Rx",
+    "OTC Medicines",
+    "Personal Hygiene",
+    "Wellness & Vitamins",
+    "First Aid & Safety",
+    "Fitness & Rehab",
+    "Alternative Medicine",
+    "Sexual Wellness",
+    "Skincare & Derma",
+    "Diabetes Care",
+    "Nutrition & Diet"
+  ];
+
+  const visualCategories = [
+    { name: "Maternal Care", image: "/care.png" },
+    { name: "Pediatrics", image: "/medical.png" },
+    { name: "Geriatrics", image: "/specialist.png" },
+    { name: "Diagnostic Scans", image: "/planning.png" },
+    { name: "Medical Supplies", image: "/delivery.png" },
+    { name: "Prescription Rx", image: "/medical.png" },
+    { name: "OTC Medicines", image: "/wellness.png" },
+    { name: "Personal Hygiene", image: "/sanitation.png" },
+    { name: "Wellness & Vitamins", image: "/wellness.png" },
+    { name: "First Aid & Safety", image: "/transport.png" },
+    { name: "Fitness & Rehab", image: "/wardrobe.png" },
+    { name: "Alternative Medicine", image: "/agro.png" },
+    { name: "Sexual Wellness", image: "/style.png" },
+    { name: "Skincare & Derma", image: "/wellness.png" },
+    { name: "Diabetes Care", image: "/medical.png" },
+    { name: "Nutrition & Diet", image: "/culinary.png" }
+  ];
   
   const getFilteredProducts = () => {
     return marketplaceProducts.filter(prod => {
@@ -132,17 +196,25 @@ export default function CreativeStorefrontPage() {
             placeholder="Search verified medicine, diagnostic labs, baby items..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#E8EFF4]/60 border border-slate-250/40 rounded-xl py-2.5 pl-10 pr-4 text-xs font-semibold outline-none focus:bg-white focus:border-slate-350 transition-all"
+            className="w-full bg-white border border-slate-200 rounded-xl py-2.5 pl-10 pr-10 text-xs font-semibold outline-none focus:border-[#8BB436]/50 focus:ring-2 focus:ring-[#8BB436]/10 shadow-xs transition-all"
           />
+          <button 
+            type="button"
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 transition-all bg-transparent border-none cursor-pointer p-0 flex items-center"
+            onClick={() => alert("Visual search is coming soon to Ahnara Market!")}
+            title="Search by image"
+          >
+            <IconCamera className="w-4.5 h-4.5" />
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={handleDashboardRedirect}
+            onClick={() => router.push("/login")}
             className="bg-[#1E293B] text-white hover:bg-slate-800 transition-all font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer border-none"
           >
-            <IconDashboard className="w-4 h-4" />
-            My Console
+            <IconUser className="w-4 h-4" />
+            Sign in
           </button>
 
           <button
@@ -159,56 +231,288 @@ export default function CreativeStorefrontPage() {
         </div>
       </header>
 
-      {/* Main Split Grid Workspace */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-8 py-8 flex flex-col lg:flex-row gap-8">
-        
-        {/* Sticky Sidebar filters (No generic hero) */}
-        <aside className="w-full lg:w-64 flex-shrink-0 flex flex-col gap-4 self-start sticky top-24">
-          <div className="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-xs text-left">
-            <h3 className="font-black text-xs uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-1">
-              <IconAdjustmentsHorizontal className="w-4.5 h-4.5 text-slate-500" />
-              Categories
-            </h3>
-            
-            <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible gap-1 scrollbar-hide">
-              {categories.map(cat => {
-                const isActive = activeCategory === cat;
-                const count = cat === "All" 
-                  ? marketplaceProducts.length 
-                  : marketplaceProducts.filter(p => p.category === cat).length;
+      {/* Subheader category line (Jumia Style) */}
+      <div className="w-full border-b border-slate-200/30 bg-white/40 backdrop-blur-md">
+        <div className="max-w-[97vw] mx-auto px-4 py-3.5 flex items-center gap-2 overflow-x-auto scrollbar-hide text-[11px] font-bold text-slate-600">
+          <span className="text-slate-900 font-extrabold flex items-center gap-1.5 pr-4 border-r border-slate-200 select-none whitespace-nowrap">
+            <IconAdjustmentsHorizontal className="w-4 h-4 text-slate-500" />
+            Quick Categories
+          </span>
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  const el = document.getElementById("healthcare-directory");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className={`px-3 py-1.5 rounded-lg transition-all border-none cursor-pointer text-xs font-bold whitespace-nowrap ${
+                  activeCategory === cat 
+                    ? "bg-[#1E293B] text-white shadow-xs" 
+                    : "hover:bg-slate-100/80 hover:text-slate-900 bg-transparent text-slate-600"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
 
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`px-4 py-2.5 rounded-xl text-xs font-bold text-left transition-all border-none cursor-pointer flex items-center justify-between gap-3 w-full whitespace-nowrap ${
-                      isActive ? "bg-[#1E293B] text-white" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 bg-transparent"
-                    }`}
-                  >
-                    <span>{cat}</span>
-                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                      isActive ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
-                    }`}>
-                      {count}
-                    </span>
-                  </button>
-                );
-              })}
+      {/* Premium Hero Carousel Banner (Inspired by Jumia style, tailored to Ahnara theme) */}
+      <div className="max-w-[97vw] w-full mx-auto px-4 pt-8">
+        <div className="relative overflow-hidden w-full bg-gradient-to-r from-slate-900 via-[#1A2536] to-slate-950 text-white rounded-3xl min-h-[360px] md:min-h-[400px] flex items-center justify-between shadow-xl border border-slate-800/85 group/banner">
+          
+          {/* Slide Content */}
+          <div className="flex-1 flex flex-col md:flex-row items-center justify-between w-full h-full relative min-h-[360px] md:min-h-[400px]">
+            
+            {/* Left side text and buttons */}
+            <div className="flex-1 flex flex-col justify-center p-8 lg:p-12 text-left z-10 max-w-xl">
+              <span className="text-[10px] font-black uppercase text-[#D4F475] tracking-widest mb-3 bg-[#D4F475]/10 px-3 py-1 rounded-full w-fit">
+                Ahnara Storefront
+              </span>
+              
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-4 leading-[1.15] text-display">
+                {bannerSlides[currentSlide].title}
+              </h1>
+              
+              <p className="text-xs md:text-sm text-slate-350 font-medium mb-8 leading-relaxed max-w-md">
+                {bannerSlides[currentSlide].subtitle}
+              </p>
+              
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => {
+                    const el = document.getElementById("healthcare-directory");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="bg-[#D4F475] text-slate-900 hover:bg-[#c2e25f] transition-all font-black px-6 py-3 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer border-none shadow-md"
+                >
+                  {bannerSlides[currentSlide].cta1}
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveCategory("Maternal Care");
+                    const el = document.getElementById("healthcare-directory");
+                    if (el) el.scrollIntoView({ behavior: "smooth" });
+                  }}
+                  className="bg-transparent hover:bg-white/10 text-white font-bold px-6 py-3 rounded-xl text-xs border border-white/20 transition-all cursor-pointer"
+                >
+                  {bannerSlides[currentSlide].cta2}
+                </button>
+              </div>
+            </div>
+
+            {/* Right side Image display */}
+            <div className="relative w-full md:w-[45%] h-[200px] md:h-[400px] flex items-center justify-center overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-slate-900 to-transparent z-10 hidden md:block" />
+              <img
+                src={bannerSlides[currentSlide].image}
+                alt="Banner Graphic"
+                className="w-full h-full object-cover md:object-right select-none"
+              />
             </div>
           </div>
-          
-          {/* Quick specs Bento Box */}
-          <div className="bg-[#E9F2F5] p-5 rounded-3xl border border-slate-200/40 text-left hidden lg:block">
-            <span className="text-[9px] font-black uppercase text-slate-400 block tracking-wider">Ahnara Security</span>
-            <h4 className="font-extrabold text-xs text-slate-800 mt-2">100% Vetted Sellers</h4>
-            <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-relaxed">
-              Every seller is audited. Pharmaceutical logs and diagnostic booking codes verified by system registries.
-            </p>
+
+          {/* Navigation Arrows */}
+          <button
+            onClick={() => setCurrentSlide(prev => (prev - 1 + bannerSlides.length) % bannerSlides.length)}
+            className="absolute left-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800 text-white flex items-center justify-center cursor-pointer transition-all z-20 opacity-0 group-hover/banner:opacity-100 shadow-md"
+            aria-label="Previous Slide"
+          >
+            <IconChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={() => setCurrentSlide(prev => (prev + 1) % bannerSlides.length)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800 text-white flex items-center justify-center cursor-pointer transition-all z-20 opacity-0 group-hover/banner:opacity-100 shadow-md"
+            aria-label="Next Slide"
+          >
+            <IconChevronRight className="w-5 h-5" />
+          </button>
+
+          {/* Dot Indicators */}
+          <div className="absolute bottom-4 left-8 lg:left-12 flex gap-1.5 z-20">
+            {bannerSlides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`transition-all duration-300 border-none cursor-pointer p-0 ${
+                  currentSlide === idx ? "w-5 h-1.5 rounded-full bg-[#D4F475]" : "w-1.5 h-1.5 rounded-full bg-white/40 hover:bg-white/60"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
           </div>
-        </aside>
+        </div>
+      </div>
+
+      {/* Visual Category Cards (Jumia style) */}
+      <div className="max-w-[97vw] w-full mx-auto px-4 pt-8">
+        <div className="bg-white rounded-3xl border border-slate-200/50 p-6 flex flex-row items-center gap-4 overflow-x-auto scrollbar-hide w-full shadow-xs justify-start">
+          
+          {visualCategories.map((vcat, index) => (
+            <React.Fragment key={vcat.name}>
+              {index > 0 && (
+                <div className="w-[1px] h-16 bg-slate-200/70 flex-shrink-0 self-center mx-1" />
+              )}
+              <button
+                onClick={() => {
+                  setActiveCategory(vcat.name);
+                  const el = document.getElementById("healthcare-directory");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="flex flex-col items-center gap-2 group cursor-pointer border-none bg-transparent min-w-[80px]"
+              >
+                <div className="w-14 h-14 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shadow-2xs group-hover:shadow-md group-hover:border-[#8BB436]/30 transition-all duration-300">
+                  <img src={vcat.image} alt={vcat.name} className="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-300" />
+                </div>
+                <span className="text-[10px] font-black text-slate-700 group-hover:text-[#8BB436] transition-colors text-center leading-tight whitespace-nowrap">
+                  {vcat.name}
+                </span>
+              </button>
+            </React.Fragment>
+          ))}
+
+          {/* Faint dividing line before View All */}
+          <div className="w-[1px] h-16 bg-slate-200/70 flex-shrink-0 self-center mx-1" />
+
+          {/* View All Categories Button */}
+          <button
+            onClick={() => {
+              setActiveCategory("All");
+              const el = document.getElementById("healthcare-directory");
+              if (el) el.scrollIntoView({ behavior: "smooth" });
+            }}
+            className="flex flex-col items-center gap-2 group cursor-pointer border-none bg-transparent min-w-[80px]"
+          >
+            <div className="w-14 h-14 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shadow-2xs group-hover:shadow-md group-hover:border-[#8BB436]/30 transition-all duration-300">
+              <IconGridPattern className="w-6 h-6 text-slate-400 group-hover:text-[#8BB436] transition-colors" />
+            </div>
+            <span className="text-[10px] font-black text-slate-700 group-hover:text-[#8BB436] transition-colors text-center leading-tight whitespace-nowrap">
+              View All
+            </span>
+          </button>
+
+        </div>
+      </div>
+
+      {/* 4 Feature Banner Cards (Inspired by Jumia, using Ahnara design system) */}
+      <div className="max-w-[97vw] w-full mx-auto px-4 pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* Ahnara Prime Card */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/50 shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-all group">
+            <div className="flex-1 text-left flex flex-col justify-between h-full min-h-[96px]">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                  Premium
+                </span>
+                <h3 className="font-extrabold text-sm text-[#1E293B] group-hover:text-[#8BB436] transition-colors leading-tight">
+                  Ahnara Prime
+                </h3>
+                <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-relaxed">
+                  Enjoy fast free delivery, exclusive deals, and priorities.
+                </p>
+              </div>
+              <button 
+                onClick={() => alert("Ahnara Prime membership activation coming soon!")}
+                className="text-[9px] font-black uppercase text-[#8BB436] hover:text-[#1E293B] transition-colors tracking-wider border-none bg-transparent cursor-pointer p-0 text-left mt-3 flex items-center gap-0.5"
+              >
+                Try Prime <IconChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <img src="/delivery.png" alt="Ahnara Prime" className="w-28 h-28 flex-shrink-0 object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+
+          {/* Super Market Card */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/50 shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-all group">
+            <div className="flex-1 text-left flex flex-col justify-between h-full min-h-[96px]">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                  Essentials
+                </span>
+                <h3 className="font-extrabold text-sm text-[#1E293B] group-hover:text-emerald-600 transition-colors leading-tight">
+                  Super Market
+                </h3>
+                <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-relaxed">
+                  Groceries, vitamins, and supplies from verified vendors.
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setActiveCategory("Medical Supplies");
+                  const el = document.getElementById("healthcare-directory");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="text-[9px] font-black uppercase text-[#8BB436] hover:text-[#1E293B] transition-colors tracking-wider border-none bg-transparent cursor-pointer p-0 text-left mt-3 flex items-center gap-0.5"
+              >
+                Shop Now <IconChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <img src="/wardrobe.png" alt="Super Market" className="w-28 h-28 flex-shrink-0 object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+
+          {/* Pay on Delivery Card */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/50 shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-all group">
+            <div className="flex-1 text-left flex flex-col justify-between h-full min-h-[96px]">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                  Flexible
+                </span>
+                <h3 className="font-extrabold text-sm text-[#1E293B] group-hover:text-sky-600 transition-colors leading-tight">
+                  Pay on Delivery
+                </h3>
+                <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-relaxed">
+                  Pay cash or transfer instantly when your package arrives.
+                </p>
+              </div>
+              <button 
+                onClick={() => alert("Cash or bank transfer on delivery is supported in all locations.")}
+                className="text-[9px] font-black uppercase text-[#8BB436] hover:text-[#1E293B] transition-colors tracking-wider border-none bg-transparent cursor-pointer p-0 text-left mt-3 flex items-center gap-0.5"
+              >
+                Learn More <IconChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <img src="/transport.png" alt="Pay on Delivery" className="w-28 h-28 flex-shrink-0 object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+
+          {/* Deals of the Day Card */}
+          <div className="bg-white p-5 rounded-3xl border border-slate-200/50 shadow-xs flex items-center justify-between gap-4 hover:shadow-md transition-all group">
+            <div className="flex-1 text-left flex flex-col justify-between h-full min-h-[96px]">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                  Hot Deals
+                </span>
+                <h3 className="font-extrabold text-sm text-[#1E293B] group-hover:text-rose-600 transition-colors leading-tight">
+                  Deals of the Day
+                </h3>
+                <p className="text-[10px] text-slate-500 font-semibold mt-1 leading-relaxed">
+                  Save up to 40% on select diagnostic kits and vitamins today.
+                </p>
+              </div>
+              <button 
+                onClick={() => {
+                  setSearchQuery("discount");
+                  const el = document.getElementById("healthcare-directory");
+                  if (el) el.scrollIntoView({ behavior: "smooth" });
+                }}
+                className="text-[9px] font-black uppercase text-[#8BB436] hover:text-[#1E293B] transition-colors tracking-wider border-none bg-transparent cursor-pointer p-0 text-left mt-3 flex items-center gap-0.5"
+              >
+                Shop Deals <IconChevronRight className="w-3 h-3" />
+              </button>
+            </div>
+            <img src="/specialist.png" alt="Deals of the Day" className="w-28 h-28 flex-shrink-0 object-contain group-hover:scale-105 transition-transform duration-300" />
+          </div>
+
+        </div>
+      </div>
+
+      {/* Main Directory Workspace */}
+      <div className="flex-1 max-w-[97vw] w-full mx-auto px-4 py-8">
 
         {/* Dynamic products masonry grid */}
-        <main className="flex-1 flex flex-col gap-6 text-left">
+        <main id="healthcare-directory" className="flex-1 flex flex-col gap-6 text-left">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black text-slate-900 tracking-tight text-display">
               {activeCategory === "All" ? "Healthcare Directory" : activeCategory}

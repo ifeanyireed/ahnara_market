@@ -3,7 +3,7 @@
 import React, { use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { initialProducts, Product } from "../../page";
+import { marketplaceProducts, Product } from "../../../productsData";
 import { AhnaraButton } from "@/components/ahnara/AhnaraButton";
 import {
   IconArrowLeft,
@@ -15,7 +15,7 @@ import {
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const product = initialProducts.find(p => p.id === resolvedParams.id);
+  const product = marketplaceProducts.find(p => p.id === resolvedParams.id);
 
   if (!product) {
     return (

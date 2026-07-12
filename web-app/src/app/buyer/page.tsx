@@ -99,13 +99,6 @@ export default function BuyerPortalPage() {
           <span className="font-extrabold text-xl tracking-tight text-slate-900 text-display">Ahnara Market</span>
         </div>
 
-        <nav className="flex items-center gap-1 bg-[#DDEEF3]/60 p-1 rounded-2xl border border-slate-300/30">
-          <Link href="/" className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-650 hover:text-slate-900 transition-all">Storefront</Link>
-          <Link href="/buyer" className="px-5 py-2.5 rounded-xl text-xs font-black text-white bg-[#1E293B]">Buyer Portal</Link>
-          <Link href="/vendor" className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-650 hover:text-slate-900 transition-all">Vendor Hub</Link>
-          <Link href="/admin" className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-650 hover:text-slate-900 transition-all">Admin Desk</Link>
-        </nav>
-
         <div className="flex items-center gap-3">
           <img src="/character3.jpg" className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-xs" />
           <div className="text-left hidden sm:block">
