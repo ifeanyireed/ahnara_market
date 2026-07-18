@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/ahnara/AuthContext";
+import { api } from "@/lib/api";
 import { marketplaceProducts, Product } from "./productsData";
 import {
   IconSearch,
@@ -31,6 +32,39 @@ export default function CreativeStorefrontPage() {
   const [cart, setCart] = useState<{ product: Product; qty: number }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState("All");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await api.get("/marketplace/products");
+        if (data && Array.isArray(data)) {
+          const mapped = data.map((p: any) => ({
+            id: p.id,
+            name: p.name,
+            description: p.description,
+            price: Number(p.price),
+            category: p.category,
+            vendor: "Ahnara Provider",
+            rating: 4.8,
+            image: p.imageUrl || "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80",
+            reviews: ["Highly recommended by specialists", "Authentic clinical quality"],
+            stock: p.inventoryCount > 0 ? "In Stock" : "Out of Stock"
+          }));
+          setProducts(mapped);
+        } else {
+          setProducts(marketplaceProducts);
+        }
+      } catch (err) {
+        console.error("Failed to load products from API, falling back to static mock", err);
+        setProducts(marketplaceProducts);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const bannerSlides = [
@@ -168,7 +202,7 @@ export default function CreativeStorefrontPage() {
   ];
   
   const getFilteredProducts = () => {
-    return marketplaceProducts.filter(prod => {
+    return products.filter(prod => {
       const matchesCategory = activeCategory === "All" || prod.category === activeCategory;
       const matchesSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         prod.vendor.toLowerCase().includes(searchQuery.toLowerCase());

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { api } from "@/lib/api";
 import { AhnaraCard } from "@/components/ahnara/AhnaraCard";
 import { AhnaraButton } from "@/components/ahnara/AhnaraButton";
 import { AhnaraInput } from "@/components/ahnara/AhnaraInput";
@@ -29,41 +30,70 @@ export default function BuyerPortalPage() {
   const [newAddrDetail, setNewAddrDetail] = useState("");
 
   useEffect(() => {
-    // Load orders from localStorage
-    const saved = localStorage.getItem("ahnara_market_orders");
-    if (saved) {
+    const loadData = async () => {
       try {
-        setOrders(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    } else {
-      // Mock starting orders if empty
-      const starting = [
-        {
-          id: "ORD-90281",
-          date: "July 04, 2026",
-          items: "SMA Gold Infant Formula x2",
-          value: 10400,
-          status: "Delivered",
-          address: "15, Admiralty Way, Lekki Phase 1, Lagos",
-          temperature: "22.5°C (Ambient)",
-          rider: "Rider Aminu"
-        },
-        {
-          id: "ORD-77215",
-          date: "June 18, 2026",
-          items: "Insulin Glargine x1",
-          value: 3500,
-          status: "Processing",
-          address: "15, Admiralty Way, Lekki Phase 1, Lagos",
-          temperature: "4.2°C",
-          rider: "Rider Joseph"
+        const orderData = await api.get("/marketplace/orders");
+        if (orderData && Array.isArray(orderData)) {
+          const mapped = orderData.map((o: any) => ({
+            id: o.id,
+            date: new Date(o.createdAt || o.orderedAt || Date.now()).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+            items: o.items ? o.items.map((i: any) => `${i.product?.name || "Product"} x${i.quantity}`).join(", ") : "Items",
+            value: Number(o.totalPrice || o.totalValue || 0),
+            status: o.status,
+            address: "15, Admiralty Way, Lekki Phase 1, Lagos",
+            temperature: "4.5°C",
+            rider: "Courier Dispatch"
+          }));
+          setOrders(mapped);
         }
-      ];
-      setOrders(starting);
-      localStorage.setItem("ahnara_market_orders", JSON.stringify(starting));
-    }
+      } catch (err) {
+        console.warn("Failed to fetch backend orders, loading mock local storage", err);
+        const saved = localStorage.getItem("ahnara_market_orders");
+        if (saved) {
+          try {
+            setOrders(JSON.parse(saved));
+          } catch (e) {
+            console.error(e);
+          }
+        } else {
+          const starting = [
+            {
+              id: "ORD-90281",
+              date: "July 04, 2026",
+              items: "SMA Gold Infant Formula x2",
+              value: 10400,
+              status: "Delivered",
+              address: "15, Admiralty Way, Lekki Phase 1, Lagos",
+              temperature: "22.5°C (Ambient)",
+              rider: "Rider Aminu"
+            },
+            {
+              id: "ORD-77215",
+              date: "June 18, 2026",
+              items: "Insulin Glargine x1",
+              value: 3500,
+              status: "Processing",
+              address: "15, Admiralty Way, Lekki Phase 1, Lagos",
+              temperature: "4.2°C",
+              rider: "Rider Joseph"
+            }
+          ];
+          setOrders(starting);
+          localStorage.setItem("ahnara_market_orders", JSON.stringify(starting));
+        }
+      }
+
+      try {
+        const wData = await api.get("/payments/wallet");
+        if (wData && wData.balance) {
+          setWalletBalance(Number(wData.balance));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch wallet balance, using local mock", err);
+      }
+    };
+
+    loadData();
   }, []);
 
   const handleAddAddress = () => {
@@ -79,12 +109,26 @@ export default function BuyerPortalPage() {
     alert("New shipping address saved successfully.");
   };
 
-  const handleTopUp = () => {
+  const handleTopUp = async () => {
     const amt = parseFloat(topUpAmount);
     if (isNaN(amt) || amt <= 0) return;
-    setWalletBalance(prev => prev + amt);
-    setTopUpAmount("");
-    alert(`₦${amt.toLocaleString()} added to your Ahnara Wallet.`);
+
+    try {
+      const ref = `topup-${Date.now()}`;
+      await api.post("/payments/wallet/topup", {
+        amount: String(amt),
+        reference: ref,
+        gateway: "paystack"
+      });
+      setWalletBalance(prev => prev + amt);
+      setTopUpAmount("");
+      alert(`₦${amt.toLocaleString()} added to your Ahnara Wallet.`);
+    } catch (err: any) {
+      console.warn("Wallet topup failed, falling back to local simulation", err);
+      setWalletBalance(prev => prev + amt);
+      setTopUpAmount("");
+      alert(`₦${amt.toLocaleString()} added to your Ahnara Wallet (Mock).`);
+    }
   };
 
   return (

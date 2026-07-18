@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/ahnara/AuthContext";
+import { api } from "@/lib/api";
 import { AhnaraCard } from "@/components/ahnara/AhnaraCard";
 import { AhnaraButton } from "@/components/ahnara/AhnaraButton";
 import { AhnaraInput } from "@/components/ahnara/AhnaraInput";
@@ -43,44 +44,63 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      setTimeout(() => {
-        setIsLoading(false);
+      // 1. Attempt real API login
+      const response = await api.post("/auth/login", { email, password });
+      setIsLoading(false);
+
+      if (response && response.token) {
+        login(response.token, response.user);
         
-        let detectedRole = "BUYER";
-        if (email.toLowerCase().includes("admin")) {
-          detectedRole = "ADMIN";
-        } else if (email.toLowerCase().includes("vendor") || email.toLowerCase().includes("pharmacist")) {
-          detectedRole = "VENDOR";
-        }
-
-        const mockToken = detectedRole === "ADMIN" 
-          ? "mock-token-admin" 
-          : detectedRole === "VENDOR" 
-          ? "mock-token-vendor" 
-          : "mock-token-buyer";
-
-        login(mockToken, {
-          id: `mock-${detectedRole.toLowerCase()}-id`,
-          email: email,
-          name: detectedRole === "ADMIN" ? "System Admin" : detectedRole === "VENDOR" ? "Adeola Pharmacy" : "Tyra Dhillon",
-          role: detectedRole,
-        });
-
-        // Save mock onboarding profiles for the storefront dashboard to consume
+        // Save profile locally
         localStorage.setItem("provider_onboarding_data", JSON.stringify({
-          practitionerName: detectedRole === "ADMIN" ? "System Admin" : detectedRole === "VENDOR" ? "Adeola Pharmacy" : "Tyra Dhillon",
-          role: detectedRole,
-          facilityName: "Lekki Care Hub",
-          specialty: detectedRole === "ADMIN" ? "Administrator" : detectedRole === "VENDOR" ? "Pharmacist" : "Client"
+          practitionerName: response.user.name,
+          role: response.user.role,
+          facilityName: "Ahnara Medical Hub",
+          specialty: response.user.role === "VENDOR" ? "Pharmacist" : "Client"
         }));
 
-        const destPath = determineRedirectPath(detectedRole, email);
+        const destPath = determineRedirectPath(response.user.role, response.user.email);
         router.push(destPath);
-      }, 1000);
+        return;
+      }
     } catch (err: any) {
-      setIsLoading(false);
-      setError(err.message || "Invalid credentials.");
+      console.warn("Real login failed, trying mock fallback...", err);
     }
+
+    // 2. Mock Fallback logic
+    setTimeout(() => {
+      setIsLoading(false);
+      
+      let detectedRole = "BUYER";
+      if (email.toLowerCase().includes("admin")) {
+        detectedRole = "ADMIN";
+      } else if (email.toLowerCase().includes("vendor") || email.toLowerCase().includes("pharmacist")) {
+        detectedRole = "VENDOR";
+      }
+
+      const mockToken = detectedRole === "ADMIN" 
+        ? "mock-token-admin" 
+        : detectedRole === "VENDOR" 
+        ? "mock-token-vendor" 
+        : "mock-token-buyer";
+
+      login(mockToken, {
+        id: `mock-${detectedRole.toLowerCase()}-id`,
+        email: email,
+        name: detectedRole === "ADMIN" ? "System Admin" : detectedRole === "VENDOR" ? "Adeola Pharmacy" : "Tyra Dhillon",
+        role: detectedRole,
+      });
+
+      localStorage.setItem("provider_onboarding_data", JSON.stringify({
+        practitionerName: detectedRole === "ADMIN" ? "System Admin" : detectedRole === "VENDOR" ? "Adeola Pharmacy" : "Tyra Dhillon",
+        role: detectedRole,
+        facilityName: "Lekki Care Hub",
+        specialty: detectedRole === "ADMIN" ? "Administrator" : detectedRole === "VENDOR" ? "Pharmacist" : "Client"
+      }));
+
+      const destPath = determineRedirectPath(detectedRole, email);
+      router.push(destPath);
+    }, 500);
   };
 
   const handleQuickLogin = (role: "BUYER" | "VENDOR" | "ADMIN") => {

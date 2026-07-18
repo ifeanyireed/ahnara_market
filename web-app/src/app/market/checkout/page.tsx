@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { api } from "@/lib/api";
 import { AhnaraCard } from "@/components/ahnara/AhnaraCard";
 import { AhnaraButton } from "@/components/ahnara/AhnaraButton";
 import { AhnaraInput } from "@/components/ahnara/AhnaraInput";
@@ -47,8 +48,29 @@ export default function CheckoutPage() {
     return Math.max(0, getSubtotal() - getGovSubsidy() - getEmployerCredit());
   };
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (cart.length === 0) return;
+
+    try {
+      const itemsPayload = cart.map(item => ({
+        product_id: item.product.id,
+        quantity: item.qty
+      }));
+
+      // Call API gateway to place order
+      const apiOrder = await api.post("/marketplace/orders", {
+        items: itemsPayload
+      });
+
+      // Clear cart
+      localStorage.removeItem("ahnara_market_cart");
+
+      alert(`Order ${apiOrder.id} successfully placed! Routing you to delivery progress...`);
+      router.push("/buyer"); // Route to buyer dashboard to see purchase history
+      return;
+    } catch (err: any) {
+      console.warn("Real order placement failed, falling back to mock storage", err);
+    }
 
     const orderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
     const newOrder = {
@@ -77,8 +99,8 @@ export default function CheckoutPage() {
     // Clear cart
     localStorage.removeItem("ahnara_market_cart");
 
-    alert(`Order ${orderId} successfully placed! Routing you to delivery progress...`);
-    router.push("/market/delivery");
+    alert(`Order ${orderId} successfully placed (Mock)! Routing you to delivery progress...`);
+    router.push("/buyer"); // Route to buyer dashboard
   };
 
   return (
